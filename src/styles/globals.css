@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-primaryText font-sans;
+    background-color: #0B1220;
+    color: #F5F7FA;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B1220;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E2D44;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #20C997;
+}
+
+/* Glassmorphism & Card Utility */
+.glass-panel {
+  background: rgba(20, 31, 48, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-hover:hover {
+  border-color: rgba(32, 201, 151, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(32, 201, 151, 0.1);
+}
+
+/* Emergency Red Glow Animation */
+@keyframes emergency-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(240, 100, 100, 0.4);
+    border-color: rgba(240, 100, 100, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(240, 100, 100, 0.8);
+    border-color: rgba(240, 100, 100, 1);
+  }
+}
+
+.emergency-active {
+  animation: emergency-pulse 2s infinite ease-in-out;
+}
