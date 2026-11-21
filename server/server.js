@@ -11,12 +11,26 @@ app.use(cors());
 app.use(express.json());
 
 app.use((req, res, next) => {
+  const startTime = Date.now();
+
   console.log(
-    `[REQUEST] ${new Date().toISOString()} ${req.method} ${req.url}`
+    `[REQUEST START] ${req.method} ${req.url}`
   );
+
+  res.on("finish", () => {
+    console.log(
+      `[REQUEST FINISHED] Status: ${res.statusCode}, Duration: ${Date.now() - startTime}ms`
+    );
+  });
+
+  res.on("close", () => {
+    if (!res.writableEnded) {
+      console.log("[RESPONSE CLOSED BEFORE COMPLETION]");
+    }
+  });
+
   next();
 });
-
 // Store the latest solar reading in memory
 let latestSolarData = null;
 
