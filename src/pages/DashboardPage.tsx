@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Zap,
@@ -10,6 +10,9 @@ import {
   Clock,
   ArrowRight,
   TrendingUp,
+  Sun,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { PageContainer } from '../components/layout/PageContainer';
@@ -29,6 +32,60 @@ import {
 } from 'recharts';
 
 export const DashboardPage: React.FC = () => {
+  
+  type SolarReading = {
+    device_id: string;
+    voltage: number;
+    current: number;
+    power: number;
+    timestamp: string;
+  };
+
+  const [solarData, setSolarData] = useState<SolarReading | null>(null);
+  const [solarConnected, setSolarConnected] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchSolarData = async () => {
+      try {
+        const response = await fetch(
+          'https://wattwise-solar-api.onrender.com/api/solar'
+        );
+
+        if (!response.ok) {
+          throw new Error('Solar API unavailable');
+        }
+
+        const result = await response.json();
+
+        if (!active) return;
+
+        setSolarData(result.data);
+
+        const readingTime = result.data?.timestamp
+          ? Date.parse(result.data.timestamp)
+          : 0;
+
+        setSolarConnected(
+          Boolean(readingTime && Date.now() - readingTime < 10000)
+        );
+      } catch (error) {
+        if (active) setSolarConnected(false);
+        console.error('Solar data error:', error);
+      }
+    };
+
+    fetchSolarData();
+
+    const interval = window.setInterval(fetchSolarData, 2000);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
   const navigate = useNavigate();
   const {
     energyMetrics,
@@ -167,6 +224,65 @@ export const DashboardPage: React.FC = () => {
         />
       </div>
 
+      
+      {/* SOLAR GENERATION STATUS */}
+      <div className="glass-panel p-4 rounded-2xl border border-white/10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-emerald/10">
+              <Sun className="w-6 h-6 text-emerald" />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-heading font-bold text-primaryText">
+                Solar Generation
+              </h3>
+              <div className="flex items-center gap-2 mt-1">
+                {solarConnected ? (
+                  <Wifi className="w-3.5 h-3.5 text-emerald" />
+                ) : (
+                  <WifiOff className="w-3.5 h-3.5 text-danger" />
+                )}
+
+                <span className={`text-xs font-medium ${
+                  solarConnected ? 'text-emerald' : 'text-danger'
+                }`}>
+                  {solarConnected
+                    ? 'Device Online'
+                    : solarData
+                    ? 'Device Offline'
+                    : 'Waiting for data'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 sm:gap-6">
+            <div>
+              <p className="text-[10px] text-secondaryText">Voltage</p>
+              <p className="text-sm font-bold text-primaryText font-mono">
+                {solarData ? solarData.voltage.toFixed(2) : '--'} V
+              </p>
+            </div>
+
+            <div>
+              <p className="text-[10px] text-secondaryText">Current</p>
+              <p className="text-sm font-bold text-primaryText font-mono">
+                {solarData ? solarData.current.toFixed(1) : '--'} mA
+              </p>
+            </div>
+
+            <div>
+              <p className="text-[10px] text-secondaryText">Power</p>
+              <p className="text-sm font-bold text-emerald font-mono">
+                {solarData ? solarData.power.toFixed(2) : '--'} W
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
       {/* SECOND ROW: 24h Consumption Curve & Budget Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Real-time 24h Load Curve Mini-Graph */}
